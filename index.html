@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interactive Math Quiz</title>
+  <style>
+    * {
+      font-family: 'Inter', sans-serif;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: linear-gradient(145deg, #e4d4d4, #4e432c);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      font-weight: bolder;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.03),
+                  inset 0 0 60px rgba(0, 0, 0, 0.5);
+      color: #122131;
+    }
+    #logo {
+      position: fixed;
+      top: 5px;
+      right: 40px;
+      width: 50px;
+      z-index: 1000;
+      transition: transform 0.3s ease;
+    }
+    #logo:hover {
+      transform: scale(1.05);
+    }
+    #container {
+      display: flex;
+      width: 97vw;
+      max-width: 1600px;
+      height: calc(100vh - 80px);
+      margin: 40px auto;
+      gap: 1vw;
+    }
+    #left-panel {
+      width: 40%;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    #question-box {
+      position: relative;
+      width: 100%;
+      height: calc(100% - 0px);
+      border: 2px solid #122131;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    #question-box::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url("https://raw.githubusercontent.com/keshav2029/Images/refs/heads/main/Grade2.bmp") no-repeat center center;
+      background-size: cover;
+      opacity: 0.3;
+      z-index: -1;
+    }
+    #question {
+      font-size: 18px;
+      font-weight: 700;  
+      color: black;
+      margin-bottom: 20px;
+      line-height: 1.6;
+      text-shadow: 0 0 9px rgba(255, 255, 255, 0.9);
+    }
+    .dropZone {
+      width: 100px;
+      height: 40px;
+      border: 2px dashed #1976d2;
+      border-radius: 6px;
+      display: inline-block;
+      line-height: 40px;
+      text-align: center;
+      background: #e8f0fe;
+      margin: 5px;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+    .dropZone.correct {
+      background: #dcedc8;
+      border: 2px solid #4caf50;
+    }
+    .dropZone.wrong {
+      background: #ffebee;
+      border: 2px solid #d32f2f;
+    }
+    .dropZone.disabled {
+      cursor: not-allowed;
+    }
+    .draggable {
+      display: inline-block;
+      padding: 10px;
+      margin: 5px;
+      background: #e8f0fe;
+      border: 2px solid #1976d2;
+      border-radius: 6px;
+      cursor: move;
+      user-select: none;
+    }
+    .draggable.correct {
+      background: #dcedc8;
+      border: 2px solid #4caf50;
+    }
+    .draggable.wrong {
+      background: #ffebee;
+      border: 2px solid #d32f2f;
+    }
+    #submitBtn, #nextBtn, #restartBtn {
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    #submitBtn {
+      background: #1976d2;
+    }
+    #submitBtn:hover:not(:disabled) {
+      background: #1565c0;
+      transform: translateY(-2px);
+    }
+    #submitBtn:disabled {
+      background: #b0bec5;
+      cursor: not-allowed;
+    }
+    #nextBtn {
+      background: #4caf50;
+      display: none;
+    }
+    #nextBtn:hover {
+      background: #43a047;
+      transform: translateY(-2px);
+    }
+    #restartBtn {
+      background: #f57c00;
+      margin-left: 10px;
+    }
+    #restartBtn:hover {
+      background: #ef6c00;
+      transform: translateY(-2px);
+    }
+    #result {
+      font-size: 18px;
+      margin-top: 15px;
+      font-weight: 500;
+    }
+    #progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      margin: 15px 0;
+      overflow: hidden;
+    }
+    #progress-fill {
+      height: 100%;
+      background: #1976d2;
+      transition: width 0.5s ease;
+    }
+    #right-panel {
+      width: 54%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: url("https://img.freepik.com/free-vector/abstract-fluid-neon-color-3d-effect-background-design-multipurpose_1340-16641.jpg") no-repeat center center;
+      background-size: cover;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+    canvas {
+      width: 100%;
+      height: calc(100% - 0px);
+      border: 2px solid #122131;
+      background: #fafafa;
+      border-radius: 8px;
+    }
+    #tools-panel {
+      width: 3%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px;
+      background: #d0c8c8;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+    .tools button, .tools select, .tools input {
+      width: 28px;
+      height: 28px;
+      margin: 5px 0;
+      padding: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 2px solid #1976d2;
+      border-radius: 6px;
+      background: #626d80;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tools button:hover, .tools select:hover, .tools input:hover {
+      background: #bbdefb;
+      transform: translateY(-2px);
+    }
+    #colorPicker {
+      padding: 0;
+      width: 28px;
+      height: 28px;
+    }
+    #canvasTextInput {
+      position: absolute;
+      display: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      padding: 8px;
+      border: 2px solid #1976d2;
+      background: #ffffff;
+      z-index: 10;
+      width: 100px; /* Initial width */
+      max-width: 300px; /* Maximum width to prevent overflow */
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    #congratsModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #ffffff;
+      border: 2px solid #1976d2;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      text-align: center;
+      z-index: 1000;
+      max-width: 400px;
+    }
+    #congratsModal h2 {
+      color: #1a3c64;
+      font-size: 24px;
+      margin: 0 0 15px;
+    }
+    #congratsModal p {
+      color: #4caf50;
+      font-size: 18px;
+      margin: 0 0 20px;
+    }
+    #closeModalBtn {
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 6px;
+      background: #1976d2;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    #closeModalBtn:hover {
+      background: #1565c0;
+      transform: translateY(-2px);
+    }
+    @media (max-width: 900px) {
+      #container {
+        flex-direction: column;
+        height: auto;
+        margin: 20px auto;
+        gap: 10px;
+      }
+      #left-panel {
+        width: 100%;
+        min-height: 50vh;
+      }
+      #right-panel {
+        width: 100%;
+        min-height: 50vh;
+      }
+      canvas {
+        height: 40vh;
+      }
+      #tools-panel {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 10px;
+      }
+      .tools button, .tools select, .tools input {
+        margin: 5px;
+      }
+      #congratsModal {
+        width: 90%;
+      }
+      .dropZone, .draggable {
+        width: 90px;
+        height: 36px;
+        font-size: 14px;
+      }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #question-box, #congratsModal {
+      animation: fadeIn 0.5s ease-out;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<img id="logo" src="https://www.schooli.online/images/schooli-logo.png" alt="Schooli Logo">
+
+<div id="container">
+  <div id="left-panel">
+    <div id="question-box">
+      <div id="question"></div>
+      <div id="mcqOptions"></div>
+      <div id="dropZones"></div>
+      <div>
+        <button id="submitBtn" disabled>Submit</button>
+        <button id="nextBtn">Next Question</button>
+        <button id="restartBtn">Restart Quiz</button>
+      </div>
+      <div id="result"></div>
+      <div id="progress-bar">
+        <div id="progress-fill"></div>
+      </div>
+    </div>
+  </div>
+  <div id="right-panel">
+    <canvas id="drawCanvas"></canvas>
+    <input type="text" id="canvasTextInput">
+  </div>
+  <div id="tools-panel">
+    <div class="tools">
+      <button id="brushBtn" aria-label="Select brush tool">🖌️</button>
+      <button id="eraserBtn" aria-label="Select eraser tool">🧽</button>
+      <select id="shapeSelector" aria-label="Select shape to draw">
+        <option value="none">➖</option>
+        <option value="circle">🔵</option>
+        <option value="rectangle">⬛</option>
+        <option value="square">🟥</option>
+        <option value="triangle">🔺</option>
+      </select>
+      <input type="color" id="colorPicker" value="#000000" aria-label="Select drawing color">
+      <button id="textBtn" aria-label="Add text to canvas">🔤</button>
+      <button id="dragBtn" aria-label="Drag shapes on canvas">🖐️</button>
+      <button id="clearBtn" aria-label="Clear canvas">🔄</button>
+    </div>
+  </div>
+</div>
+
+<div id="congratsModal">
+  <h2>Congratulations!</h2>
+  <p>You’re building magic, Pippin! Make those rules!</p>
+  <button id="closeModalBtn" aria-label="Close congratulations modal">Close</button>
+</div>
+
+<script>
+  const canvas = document.getElementById('drawCanvas');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  const congratsModal = document.getElementById('congratsModal');
+  let drawing = false, erasing = false, currentShape = 'none', addingText = false, dragging = false;
+  let startX, startY, endX, endY;
+  let currentColor = '#000000';
+  const textInput = document.getElementById('canvasTextInput');
+  let dropZones = [];
+  let submitBtn = document.getElementById('submitBtn');
+  let shapes = [];
+  let drawnPath = [];
+  let selectedShape = null;
+  let moving = false;
+  let offsetX, offsetY;
+  let lastRedrawTime = 0;
+  const REDRAW_INTERVAL = 16; // ~60 FPS
+  const ERASER_RADIUS = 10;
+  let previewShape = null;
+
+  // Audio Context for sound effects
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  document.addEventListener('click', () => {
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }, { once: true });
+
+  const questions = [
+    {
+      type: 'mcq',
+      q: 'Pippin starts at 10 and adds the same number. Which could be her pattern?',
+      options: ['10, 12, 14, 16', '10, 13, 15, 17', '10, 14, 18, 22', '10, 11, 12, 13'],
+      ans: ['10, 12, 14, 16']
+    },
+    {
+      type: 'drag',
+      q: 'Pippin builds a pattern starting at 8, subtracting 2: 8, ⬜, ⬜, 2.<br>Missing numbers: ⬜ ⬜',
+      ans: ['6', '4'],
+      draggables: ['4', '5', '6', '7']
+    },
+    {
+      type: 'fill',
+      q: 'Pippin creates a pattern starting at 7 with rule Add 4. The third number is ___.<br>Third number: ⬜',
+      ans: ['15']
+    },
+    {
+      type: 'match',
+      q: 'Pippin matches starting numbers and rules to sequences:<br>Start 12, Add 3 → ⬜<br>Start 20, Subtract 4 → ⬜',
+      ans: ['12, 15, 18, 21', '20, 16, 12, 8'],
+      draggables: ['12, 15, 18, 21', '20, 16, 12, 8', '12, 14, 16, 18', '20, 18, 16, 14']
+    },
+    {
+      type: 'fill',
+      q: 'Pippin colors a number line for a pattern starting at 5, adding 3, up to the fifth number. What’s the fifth number?<br>Fifth number: ⬜',
+      ans: ['17']
+    },
+    {
+      type: 'word',
+      q: 'Pippin makes a pattern starting at 14, subtracting 3. What’s the fourth number?<br>Fourth number: ⬜',
+      ans: ['5']
+    }
+  ];
+
+  let current = 0;
+  const questionEl = document.getElementById('question');
+  const resultEl = document.getElementById('result');
+  const nextBtn = document.getElementById('nextBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const mcqOptionsEl = document.getElementById('mcqOptions');
+  const dropZonesEl = document.getElementById('dropZones');
+  const progressFill = document.getElementById('progress-fill');
+  let draggables = [];
+
+  function loadQuestion() {
+    if (!questions[current]) {
+      console.error('No question found at index', current);
+      questionEl.textContent = 'Error: No question available';
+      return;
+    }
+    const q = questions[current];
+    if ((q.type === 'mcq' || q.type === 'drag' || q.type === 'match') && (!q.options && !q.draggables || !q.ans)) {
+      console.error('Invalid question', q);
+      questionEl.textContent = 'Error: Invalid question format';
+      return;
+    }
+    if (q.type === 'fill' && !q.ans) {
+      console.error('Invalid fill question', q);
+      questionEl.textContent = 'Error: Invalid question format';
+      return;
+    }
+    dropZones = [];
+    draggables = [];
+    mcqOptionsEl.innerHTML = '';
+    dropZonesEl.innerHTML = '';
+    questionEl.innerHTML = `Solve: <strong>${q.q}</strong>`;
+
+    if (q.type === 'mcq') {
+      q.options.forEach((option, index) => {
+        const label = document.createElement('label');
+        label.style.display = 'block';
+        const input = document.createElement('input');
+        input.type = q.ans.length > 1 ? 'checkbox' : 'radio';
+        input.name = 'mcqOption';
+        input.value = option;
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(` ${option}`));
+        mcqOptionsEl.appendChild(label);
+      });
+      document.querySelectorAll('input[name="mcqOption"]').forEach(input => {
+        input.addEventListener('change', () => {
+          if (input.checked) playSound(500, 0.1, 'sine');
+          updateSubmitButton();
+        });
+      });
+    } else if (q.type === 'drag' || q.type === 'match') {
+      let tempText = q.q;
+      for (let i = 0; i < q.ans.length; i++) {
+        tempText = tempText.replace('⬜', `<span class="dropZone" id="dropZone${i + 1}" aria-label="Drop zone ${i + 1}"></span>`);
+      }
+      questionEl.innerHTML = `Solve: <strong>${tempText}</strong>`;
+      dropZones = Array.from(document.querySelectorAll('.dropZone'));
+      q.draggables.forEach((option, index) => {
+        const draggable = document.createElement('span');
+        draggable.className = 'draggable';
+        draggable.textContent = option;
+        draggable.setAttribute('draggable', true);
+        draggable.id = `draggable${index + 1}`;
+        draggable.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/plain', e.target.textContent);
+          e.target.style.opacity = '0.5';
+        });
+        draggable.addEventListener('dragend', e => {
+          e.target.style.opacity = '1';
+        });
+        mcqOptionsEl.appendChild(draggable);
+      });
+      draggables = Array.from(document.querySelectorAll('.draggable'));
+      dropZones.forEach((zone, index) => {
+        zone.addEventListener('dragover', e => {
+          e.preventDefault();
+        });
+        zone.addEventListener('drop', e => {
+          e.preventDefault();
+          const data = e.dataTransfer.getData('text/plain');
+          if (!zone.classList.contains('disabled')) {
+            zone.textContent = data;
+            playSound(500, 0.1, 'sine');
+            updateSubmitButton();
+          }
+        });
+      });
+    } else if (q.type === 'fill' || q.type === 'word') {
+      let tempText = q.q;
+      for (let i = 0; i < q.ans.length; i++) {
+        tempText = tempText.replace('⬜', `<input type="text" class="dropZone" id="dropZone${i + 1}" aria-label="Answer input ${i + 1}">`);
+      }
+      questionEl.innerHTML = `Solve: <strong>${tempText}</strong>`;
+      dropZones = Array.from(document.querySelectorAll('.dropZone'));
+      dropZones.forEach((zone, index) => {
+        zone.value = '';
+        zone.classList.remove('correct', 'wrong');
+        zone.disabled = false;
+        zone.addEventListener('input', () => {
+          playSound(500, 0.1, 'sine');
+          updateSubmitButton();
+        });
+      });
+    }
+
+    if (dropZones.length > 0 && q.type !== 'drag' && q.type === 'match') {
+      setTimeout(() => {
+        const firstZone = dropZones[0];
+        if (firstZone) firstZone.focus();
+      }, 0);
+    }
+    resultEl.textContent = '';
+    nextBtn.style.display = 'none';
+    submitBtn.disabled = true;
+
+    shapes = [];
+    drawnPath = [];
+    selectedShape = null;
+    textInput.style.display = 'none';
+    canvas.style.cursor = 'none';
+
+    if (current === 0) {
+      drawNumberLine(10, 16, 2);
+    } else if (current === 1) {
+      drawNumberLine(8, 2, -2);
+    } else if (current === 2) {
+      drawNumberLine(7, 15, 4);
+    } else if (current === 3) {
+      drawNumberLine(12, 21, 3); // Default to first sequence
+    } else if (current === 4) {
+      drawNumberLine(5, 17, 3);
+    } else if (current === 5) {
+      drawNumberLine(14, 5, -3);
+    }
+
+    redrawCanvas();
+    updateProgressBar();
+  }
+
+  function playSound(frequency, duration, type = 'sine') {
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+    gainNode.gain.setValueAtTime(0.5, audioCtx.currentTime);
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + duration);
+  }
+
+  function playCongratsSound() {
+    const notes = [600, 800, 1000];
+    notes.forEach((freq, index) => {
+      setTimeout(() => playSound(freq, 0.2, 'triangle'), index * 200);
+    });
+  }
+
+  function normalizeInput(input) {
+    return input ? input.trim().toLowerCase().replace(/\s+/g, ' ') : '';
+  }
+
+  function getCanvasCoordinates(e) {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height)
+    };
+  }
+
+  function isPointInShape(x, y, shape, forDragging = false) {
+    const hitboxPadding = forDragging ? 15 : 10;
+    if (shape.type === 'circle') {
+      const radius = Math.sqrt((shape.endX - shape.startX) ** 2 + (shape.endY - shape.startY) ** 2);
+      const distance = Math.sqrt((x - shape.startX) ** 2 + (y - shape.startY) ** 2);
+      return forDragging ? distance <= radius + hitboxPadding : Math.abs(distance - radius) <= hitboxPadding;
+    } else if (shape.type === 'rectangle' || shape.type === 'square') {
+      const minX = Math.min(shape.startX, shape.endX);
+      const maxX = Math.max(shape.startX, shape.endX);
+      const minY = Math.min(shape.startY, shape.endY);
+      const maxY = Math.max(shape.startY, shape.endY);
+      if (forDragging) {
+        return x >= minX - hitboxPadding && x <= maxX + hitboxPadding && y >= minY - hitboxPadding && y <= maxY + hitboxPadding;
+      }
+      const nearLeft = Math.abs(x - minX) <= hitboxPadding && y >= minY && y <= maxY;
+      const nearRight = Math.abs(x - maxX) <= hitboxPadding && y >= minY && y <= maxY;
+      const nearTop = Math.abs(y - minY) <= hitboxPadding && x >= minX && x <= maxX;
+      const nearBottom = Math.abs(y - maxY) <= hitboxPadding && x >= minX && x <= maxX;
+      return nearLeft || nearRight || nearTop || nearBottom;
+    } else if (shape.type === 'triangle') {
+      const x1 = shape.startX, y1 = shape.startY;
+      const x2 = shape.endX, y2 = shape.endY;
+      const x3 = shape.startX - (shape.endX - shape.startX), y3 = shape.endY;
+      if (forDragging) {
+        const minX = Math.min(x1, x2, x3), maxX = Math.max(x1, x2, x3);
+        const minY = Math.min(y1, y2, y3), maxY = Math.max(y1, y2, y3);
+        return x >= minX - hitboxPadding && x <= maxX + hitboxPadding && y >= minY - hitboxPadding && y <= maxY + hitboxPadding;
+      }
+      const dist1 = distanceToSegment(x, y, x1, y1, x2, y2);
+      const dist2 = distanceToSegment(x, y, x2, y2, x3, y3);
+      const dist3 = distanceToSegment(x, y, x3, y3, x1, y1);
+      return Math.min(dist1, dist2, dist3) <= hitboxPadding;
+    } else if (shape.type === 'text') {
+      ctx.font = '20px Inter';
+      const metrics = ctx.measureText(shape.text);
+      const width = metrics.width;
+      const height = 20;
+      return x >= shape.startX - hitboxPadding && x <= shape.startX + width + hitboxPadding &&
+             y >= shape.startY - hitboxPadding && y <= shape.startY + height + hitboxPadding;
+    }
+    return false;
+  }
+
+  function distanceToSegment(px, py, x1, y1, x2, y2) {
+    const l2 = (x2 - x1) ** 2 + (y2 - y1) ** 2;
+    if (l2 === 0) return Math.sqrt((px - x1) ** 2 + (py - y1) ** 2);
+    const t = Math.max(0, Math.min(1, ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / l2));
+    const projectionX = x1 + t * (x2 - x1);
+    const projectionY = y1 + t * (y2 - y1);
+    return Math.sqrt((px - projectionX) ** 2 + (py - projectionY) ** 2);
+  }
+
+  function splitPathSegment(segment, x, y) {
+    const newSegments = [];
+    let currentSegment = { points: [], color: segment.color };
+    let inGap = false;
+
+    segment.points.forEach((point, i) => {
+      const dist = Math.hypot(x - point.x, y - point.y);
+      if (dist <= ERASER_RADIUS) {
+        if (currentSegment.points.length > 1) {
+          newSegments.push(currentSegment);
+          currentSegment = { points: [], color: segment.color };
+        }
+        inGap = true;
+      } else {
+        if (inGap && currentSegment.points.length > 0) {
+          newSegments.push(currentSegment);
+          currentSegment = { points: [], color: segment.color };
+        }
+        inGap = false;
+        currentSegment.points.push(point);
+      }
+    });
+
+    if (currentSegment.points.length > 1) {
+      newSegments.push(currentSegment);
+    }
+    return newSegments;
+  }
+
+  function keepShapeInBounds(shape) {
+    const padding = 50;
+    const minX = padding;
+    const minY = padding;
+    const maxX = canvas.width - padding;
+    const maxY = canvas.height - padding;
+
+    if (shape.type === 'text') {
+      ctx.font = '20px Inter';
+      const metrics = ctx.measureText(shape.text);
+      const width = metrics.width;
+      const height = 20;
+      shape.startX = Math.max(minX, Math.min(shape.startX, maxX - width - 5));
+      shape.startY = Math.max(minY, Math.min(shape.startY, maxY - height - 5));
+    } else {
+      const shapeMinX = Math.min(shape.startX, shape.endX);
+      const shapeMaxX = Math.max(shape.startX, shape.endX);
+      const shapeMinY = Math.min(shape.startY, shape.endY);
+      const shapeMaxY = Math.max(shape.startY, shape.endY);
+
+      if (shapeMinX < minX) {
+        shape.startX += minX - shapeMinX;
+        shape.endX += minX - shapeMinX;
+      }
+      if (shapeMaxX > maxX) {
+        shape.startX -= shapeMaxX - maxX;
+        shape.endX -= shapeMaxX - maxX;
+      }
+      if (shapeMinY < minY) {
+        shape.startY += minY - shapeMinY;
+        shape.endY += minY - shapeMinY;
+      }
+      if (shapeMaxY > maxY) {
+        shape.startY -= shapeMaxY - maxY;
+        shape.endY -= shapeMaxY - maxY;
+      }
+    }
+  }
+
+  function measureTextWidth(text, font = '16px Inter') {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    context.font = font;
+    const metrics = context.measureText(text);
+    return metrics.width;
+  }
+
+  function drawNumberLine(startNum, endNum, increment, highlightNum = null) {
+    shapes = [];
+    const numberLineY = canvas.height / 2;
+    const padding = 50;
+    const CM_TO_PIXELS = 37.8 * (window.devicePixelRatio || 1); // 1 cm ≈ 37.8 pixels at 96 DPI
+    const availableWidth = canvas.width - padding; // Only right padding
+    const numTicks = Math.floor(Math.abs(endNum - startNum) / Math.abs(increment)) + 1;
+    const maxTicks = Math.floor(availableWidth / CM_TO_PIXELS) + 1;
+    const ticksToDraw = Math.min(numTicks, maxTicks);
+    const rulerLength = (ticksToDraw - 1) * CM_TO_PIXELS;
+    const startX = padding; // Start at left edge after padding
+    const endX = startX + rulerLength;
+    const tickSpacing = CM_TO_PIXELS;
+    const tickHeight = 15;
+
+    // Draw number line (ruler style: thicker, distinct color)
+    shapes.push({
+      type: 'rectangle',
+      startX: startX,
+      startY: numberLineY - 4,
+      endX: endX,
+      endY: numberLineY + 4,
+      color: '#0d47a1'
+    });
+
+    // Draw ticks and numbers
+    let currentNum = startNum;
+    for (let i = 0; i < ticksToDraw && (increment > 0 ? currentNum <= endNum : currentNum >= endNum); i++, currentNum += increment) {
+      const x = startX + i * tickSpacing;
+      shapes.push({
+        type: 'rectangle',
+        startX: Math.max(padding, x - 2),
+        startY: numberLineY - tickHeight / 2,
+        endX: Math.min(endX, x + 2),
+        endY: numberLineY + tickHeight / 2,
+        color: '#0d47a1'
+      });
+      shapes.push({
+        type: 'text',
+        text: currentNum.toString(),
+        startX: Math.max(padding + 5, Math.min(x - 10, endX - 30)),
+        startY: numberLineY + tickHeight + 15,
+        color: '#0d47a1'
+      });
+      if (highlightNum !== null && currentNum === highlightNum) {
+        shapes.push({
+          type: 'circle',
+          startX: x,
+          startY: numberLineY,
+          endX: Math.min(endX, x + 10),
+          endY: numberLineY + 10,
+          color: '#d32f2f'
+        });
+      }
+    }
+    redrawCanvas();
+  }
+
+  function drawNumberLineForColorQuestion(numbers) {
+    shapes = [];
+    const numberLineY = canvas.height / 2;
+    const padding = 50;
+    const CM_TO_PIXELS = 37.8 * (window.devicePixelRatio || 1); // 1 cm ≈ 37.8 pixels at 96 DPI
+    const maxNum = Math.max(...numbers, numbers[numbers.length - 1]);
+    const minNum = Math.min(...numbers);
+    const numTicks = maxNum - minNum + 1;
+    const availableWidth = canvas.width - padding; // Only right padding
+    const maxTicks = Math.floor(availableWidth / CM_TO_PIXELS) + 1;
+    const ticksToDraw = Math.min(numTicks, maxTicks);
+    const rulerLength = (ticksToDraw - 1) * CM_TO_PIXELS;
+    const startX = padding; // Start at left edge after padding
+    const endX = startX + rulerLength;
+    const tickSpacing = CM_TO_PIXELS;
+    const tickHeight = 15;
+
+    // Draw number line (ruler style)
+    shapes.push({
+      type: 'rectangle',
+      startX: startX,
+      startY: numberLineY - 4,
+      endX: endX,
+      endY: numberLineY + 4,
+      color: '#0d47a1'
+    });
+
+    // Draw ticks and numbers
+    for (let i = 0; i < ticksToDraw; i++) {
+      const num = minNum + i;
+      if (num > maxNum) break;
+      const x = startX + i * tickSpacing;
+      shapes.push({
+        type: 'rectangle',
+        startX: Math.max(padding, x - 2),
+        startY: numberLineY - tickHeight / 2,
+        endX: Math.min(endX, x + 2),
+        endY: numberLineY + tickHeight / 2,
+        color: '#0d47a1'
+      });
+      shapes.push({
+        type: 'text',
+        text: num.toString(),
+        startX: Math.max(padding + 5, Math.min(x - 10, endX - 30)),
+        startY: numberLineY + tickHeight + 15,
+        color: '#0d47a1'
+      });
+      if (numbers.includes(num)) {
+        shapes.push({
+          type: 'circle',
+          startX: x,
+          startY: numberLineY,
+          endX: Math.min(endX, x + 10),
+          endY: numberLineY + 10,
+          color: '#4caf50'
+        });
+      }
+    }
+    redrawCanvas();
+  }
+
+  function redrawCanvas(tempShape = null) {
+    const now = performance.now();
+    if (now - lastRedrawTime < REDRAW_INTERVAL) return;
+    lastRedrawTime = now;
+
+    ctx.fillStyle = '#fafafa';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    drawnPath.forEach(segment => {
+      ctx.strokeStyle = segment.color;
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      segment.points.forEach((point, i) => {
+        if (i === 0) {
+          ctx.moveTo(point.x, point.y);
+        } else {
+          ctx.lineTo(point.x, point.y);
+        }
+      });
+      ctx.stroke();
+    });
+
+    shapes.forEach(shape => {
+      ctx.strokeStyle = shape === selectedShape ? '#d32f2f' : shape.color;
+      ctx.fillStyle = shape === selectedShape ? '#d32f2f' : shape.color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (shape.type === 'circle') {
+        const radius = Math.sqrt((shape.endX - shape.startX) ** 2 + (shape.endY - shape.startY) ** 2);
+        ctx.arc(shape.startX, shape.startY, radius, 0, 2 * Math.PI);
+        ctx.fill();
+      } else if (shape.type === 'rectangle') {
+        ctx.fillRect(shape.startX, shape.startY, shape.endX - shape.startX, shape.endY - shape.startY);
+      } else if (shape.type === 'square') {
+        const size = Math.min(Math.abs(shape.endX - shape.startX), Math.abs(shape.endY - shape.startY));
+        const offsetX = (shape.endX >= shape.startX) ? size : -size;
+        const offsetY = (shape.endY >= shape.startY) ? size : -size;
+        ctx.fillRect(shape.startX, shape.startY, offsetX, offsetY);
+      } else if (shape.type === 'triangle') {
+        ctx.moveTo(shape.startX, shape.startY);
+        ctx.lineTo(shape.endX, shape.endY);
+        ctx.lineTo(shape.startX - (shape.endX - shape.startX), shape.endY);
+        ctx.closePath();
+        ctx.fill();
+      } else if (shape.type === 'text') {
+        ctx.font = '20px Inter';
+        ctx.fillText(shape.text, shape.startX, shape.startY + 20);
+      }
+    });
+
+    if (tempShape) {
+      ctx.strokeStyle = currentColor;
+      ctx.fillStyle = currentColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (tempShape.type === 'circle') {
+        const radius = Math.sqrt((tempShape.endX - tempShape.startX) ** 2 + (tempShape.endY - tempShape.startY) ** 2);
+        ctx.arc(tempShape.startX, tempShape.startY, radius, 0, 2 * Math.PI);
+        ctx.fill();
+      } else if (tempShape.type === 'rectangle') {
+        ctx.fillRect(tempShape.startX, tempShape.startY, tempShape.endX - tempShape.startX, tempShape.endY - tempShape.startY);
+      } else if (tempShape.type === 'square') {
+        const size = Math.min(Math.abs(tempShape.endX - tempShape.startX), Math.abs(tempShape.endY - tempShape.startY));
+        const offsetX = (tempShape.endX >= tempShape.startX) ? size : -size;
+        const offsetY = (tempShape.endY >= tempShape.startY) ? size : -size;
+        ctx.fillRect(tempShape.startX, tempShape.startY, offsetX, offsetY);
+      } else if (tempShape.type === 'triangle') {
+        ctx.moveTo(tempShape.startX, tempShape.startY);
+        ctx.lineTo(tempShape.endX, tempShape.endY);
+        ctx.lineTo(tempShape.startX - (tempShape.endX - shape.startX), tempShape.endY);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.stroke();
+    }
+  }
+
+  function resizeCanvasToDisplaySize() {
+    const displayWidth = canvas.clientWidth;
+    const displayHeight = canvas.clientHeight;
+    const dpr = window.devicePixelRatio || 1;
+    if (canvas.width !== displayWidth * dpr || canvas.height !== displayHeight * dpr) {
+      canvas.width = displayWidth * dpr;
+      canvas.height = displayHeight * dpr;
+      ctx.scale(dpr, dpr);
+      redrawCanvas();
+    }
+  }
+
+  let resizeTimeout;
+  function debounceResize() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => resizeCanvasToDisplaySize(), 100);
+  }
+  resizeCanvasToDisplaySize();
+  window.addEventListener('resize', debounceResize);
+
+  let currentSegment = null;
+  canvas.addEventListener('mousedown', e => {
+    const coords = getCanvasCoordinates(e);
+    startX = coords.x;
+    startY = coords.y;
+
+    if (dragging) {
+      selectedShape = shapes.slice().reverse().find(shape => isPointInShape(startX, startY, shape, true));
+      if (selectedShape) {
+        moving = true;
+        offsetX = startX - selectedShape.startX;
+        offsetY = startY - selectedShape.startY;
+        redrawCanvas();
+      } else {
+        selectedShape = null;
+        redrawCanvas();
+      }
+    } else if (currentShape !== 'none' && !addingText && !erasing) {
+      drawing = true;
+      previewShape = { type: currentShape, startX, startY, endX: startX, endY: startY, color: currentColor };
+    } else if (!addingText && !dragging && !erasing) {
+      drawing = true;
+      currentSegment = { points: [{ x: startX, y: startY }], color: currentColor };
+      drawnPath.push(currentSegment);
+      ctx.strokeStyle = currentColor;
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+    }
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    const coords = getCanvasCoordinates(e);
+    endX = coords.x;
+    endY = coords.y;
+
+    canvas.style.cursor = 'none';
+    redrawCanvas();
+
+    if (erasing && e.buttons === 1) {
+      const newPaths = [];
+      drawnPath.forEach(segment => {
+        const splitSegments = splitPathSegment(segment, endX, endY);
+        newPaths.push(...splitSegments);
+      });
+      drawnPath = newPaths;
+      shapes = shapes.filter(shape => !isPointInShape(endX, endY, shape));
+      redrawCanvas();
+      ctx.beginPath();
+      ctx.arc(endX, endY, ERASER_RADIUS, 0, 2 * Math.PI);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1;
+      ctx.fill();
+      ctx.stroke();
+    } else if (dragging && moving && selectedShape) {
+      selectedShape.startX = endX - offsetX;
+      selectedShape.startY = endY - offsetY;
+      if (selectedShape.type !== 'text') {
+        selectedShape.endX = selectedShape.startX + (selectedShape.endX - selectedShape.startX);
+        selectedShape.endY = selectedShape.startY + (selectedShape.endY - selectedShape.startY);
+      }
+      keepShapeInBounds(selectedShape);
+      redrawCanvas();
+      ctx.beginPath();
+      ctx.moveTo(endX - 10, endY);
+      ctx.lineTo(endX + 10, endY);
+      ctx.moveTo(endX, endY - 10);
+      ctx.lineTo(endX, endY + 10);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (drawing && currentShape !== 'none' && !addingText) {
+      previewShape.endX = endX;
+      previewShape.endY = endY;
+      redrawCanvas(previewShape);
+      ctx.beginPath();
+      ctx.moveTo(endX - 10, endY);
+      ctx.lineTo(endX + 10, endY);
+      ctx.moveTo(endX, endY - 10);
+      ctx.lineTo(endX, endY + 10);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (drawing && !addingText && !dragging && !erasing) {
+      currentSegment.points.push({ x: endX, y: endY });
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+      redrawCanvas();
+      ctx.beginPath();
+      ctx.arc(endX, endY, 2, 0, 2 * Math.PI);
+      ctx.fillStyle = currentColor;
+      ctx.fill();
+    } else if (!drawing && !addingText && !dragging && !erasing) {
+      ctx.beginPath();
+      ctx.arc(endX, endY, 2, 0, 2 * Math.PI);
+      ctx.fillStyle = currentColor;
+      ctx.fill();
+    } else if (!drawing && currentShape !== 'none' && !addingText && !dragging && !erasing) {
+      redrawCanvas({ type: currentShape, startX: endX, startY: endY, endX: endX + 50, endY: endY + 50, color: currentColor });
+      ctx.beginPath();
+      ctx.moveTo(endX - 10, endY);
+      ctx.lineTo(endX + 10, endY);
+      ctx.moveTo(endX, endY - 10);
+      ctx.lineTo(endX, endY + 10);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else if (addingText) {
+      ctx.beginPath();
+      ctx.moveTo(endX, endY - 10);
+      ctx.lineTo(endX, endY + 10);
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  });
+
+  canvas.addEventListener('mouseup', e => {
+    if (drawing && currentShape !== 'none' && !addingText && !erasing) {
+      const newShape = { type: currentShape, startX, startY, endX, endY, color: currentColor };
+      keepShapeInBounds(newShape);
+      shapes.push(newShape);
+      previewShape = null;
+      redrawCanvas();
+    } else if (drawing && !addingText && !dragging && !erasing) {
+      redrawCanvas();
+    }
+    drawing = false;
+    moving = false;
+    currentSegment = null;
+    ctx.beginPath();
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    if (drawing && currentShape !== 'none' && !addingText && !erasing) {
+      const newShape = { type: currentShape, startX, startY, endX, endY, color: currentColor };
+      keepShapeInBounds(newShape);
+      shapes.push(newShape);
+      previewShape = null;
+    }
+    drawing = false;
+    moving = false;
+    currentSegment = null;
+    ctx.beginPath();
+    canvas.style.cursor = 'default';
+    redrawCanvas();
+  });
+
+  canvas.addEventListener('mouseenter', () => {
+    canvas.style.cursor = 'none';
+  });
+
+  canvas.addEventListener('click', e => {
+    if (addingText) {
+      const coords = getCanvasCoordinates(e);
+      const inputX = Math.min(coords.x, canvas.width - 100);
+      const inputY = Math.min(coords.y, canvas.height - 28);
+      textInput.style.left = `${canvas.offsetLeft + inputX / (window.devicePixelRatio || 1)}px`;
+      textInput.style.top = `${canvas.offsetTop + inputY / (window.devicePixelRatio || 1)}px`;
+      textInput.style.display = 'block';
+      textInput.value = '';
+      textInput.style.width = '100px'; // Reset to minimum width
+      textInput.focus();
+      startX = inputX;
+      startY = inputY;
+    }
+  });
+
+  textInput.addEventListener('input', () => {
+    const text = textInput.value || ' '; // Use a single space as a fallback for empty input
+    const textWidth = measureTextWidth(text, '16px Inter') + 20; // Add padding
+    textInput.style.width = `${Math.max(textWidth, 100)}px`; // Minimum width of 100px
+  });
+
+  textInput.addEventListener('keypress', e => {
+    if (e.key === 'Enter') {
+      const text = textInput.value.trim();
+      if (text) {
+        const newShape = { type: 'text', text, startX, startY, color: currentColor };
+        keepShapeInBounds(newShape);
+        shapes.push(newShape);
+        redrawCanvas();
+      }
+      textInput.style.display = 'none';
+      textInput.value = '';
+      addingText = false;
+      canvas.style.cursor = 'none';
+    }
+  });
+
+  textInput.addEventListener('blur', () => {
+    const text = textInput.value.trim();
+    if (text) {
+      const newShape = { type: 'text', text, startX, startY, color: currentColor };
+      keepShapeInBounds(newShape);
+      shapes.push(newShape);
+      redrawCanvas();
+    }
+    textInput.style.display = 'none';
+    textInput.value = '';
+    addingText = false;
+    canvas.style.cursor = 'none';
+  });
+
+  document.getElementById('brushBtn').onclick = () => {
+    erasing = false;
+    currentShape = 'none';
+    addingText = false;
+    dragging = false;
+    textInput.style.display = 'none';
+    selectedShape = null;
+    canvas.style.cursor = 'none';
+    redrawCanvas();
+  };
+
+  document.getElementById('eraserBtn').onclick = () => {
+    erasing = true;
+    currentShape = 'none';
+    addingText = false;
+    dragging = false;
+    textInput.style.display = 'none';
+    selectedShape = null;
+    canvas.style.cursor = 'none';
+    redrawCanvas();
+  };
+
+  document.getElementById('shapeSelector').onchange = e => {
+    currentShape = e.target.value;
+    erasing = false;
+    addingText = false;
+    dragging = false;
+    textInput.style.display = 'none';
+    selectedShape = null;
+    canvas.style.cursor = 'none';
+    redrawCanvas();
+  };
+
+  document.getElementById('colorPicker').onchange = e => {
+    currentColor = e.target.value;
+  };
+
+  document.getElementById('textBtn').onclick = () => {
+    erasing = false;
+    currentShape = 'none';
+    addingText = true;
+    dragging = false;
+    textInput.style.display = 'none';
+    selectedShape = null;
+    canvas.style.cursor = 'none';
+    redrawCanvas();
+  };
+
+  document.getElementById('dragBtn').onclick = () => {
+    erasing = false;
+    currentShape = 'none';
+    addingText = false;
+    dragging = true;
+    textInput.style.display = 'none';
+    selectedShape = null;
+    canvas.style.cursor = 'none';
+    redrawCanvas();
+  };
+
+  document.getElementById('clearBtn').onclick = () => {
+    shapes = [];
+    drawnPath = [];
+    selectedShape = null;
+    textInput.style.display = 'none';
+    erasing = false;
+    currentShape = 'none';
+    addingText = false;
+    dragging = false;
+    canvas.style.cursor = 'none';
+    loadQuestion();
+  };
+
+  document.querySelectorAll('.tools button, .tools select').forEach(element => {
+    element.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        element.click();
+      }
+    });
+  });
+
+  function updateProgressBar() {
+    const progress = ((current + 1) / questions.length) * 100;
+    progressFill.style.width = `${progress}%`;
+  }
+
+  function showCongratsModal() {
+    playCongratsSound();
+    congratsModal.style.display = 'block';
+    document.getElementById('closeModalBtn').focus();
+    const focusableElements = congratsModal.querySelectorAll('button');
+    const focusTrap = e => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        focusableElements[0].focus();
+      }
+      if (e.key === 'Escape') {
+        document.getElementById('closeModalBtn').click();
+      }
+    };
+    congratsModal.addEventListener('keydown', focusTrap);
+    document.getElementById('closeModalBtn').onclick = () => {
+      congratsModal.style.display = 'none';
+      current = 0;
+      loadQuestion();
+      congratsModal.removeEventListener('keydown', focusTrap);
+    };
+  }
+
+  function checkAnswer() {
+    const q = questions[current];
+    let isCorrect = true;
+
+    if (q.type === 'mcq') {
+      const selectedOptions = Array.from(document.querySelectorAll('input[name="mcqOption"]:checked')).map(input => normalizeInput(input.value));
+      const correctAnswers = q.ans.map(ans => normalizeInput(ans));
+      isCorrect = selectedOptions.length === correctAnswers.length && 
+                 correctAnswers.every(ans => selectedOptions.includes(ans)) && 
+                 selectedOptions.every(opt => correctAnswers.includes(opt));
+      document.querySelectorAll('input[name="mcqOption"]').forEach(input => {
+        const label = input.parentElement;
+        label.classList.remove('correct', 'wrong');
+        if (input.checked) {
+          label.classList.add(correctAnswers.includes(normalizeInput(input.value)) ? 'correct' : 'wrong');
+        } else if (correctAnswers.includes(normalizeInput(input.value))) {
+          label.classList.add('wrong');
+        }
+      });
+    } else if (q.type === 'drag' || q.type === 'match') {
+      const answers = dropZones.map(zone => normalizeInput(zone.textContent));
+      const correctAnswers = q.ans.map(ans => normalizeInput(ans));
+      isCorrect = correctAnswers.every((ans, i) => ans === answers[i]);
+      dropZones.forEach((zone, i) => {
+        zone.classList.remove('correct', 'wrong');
+        zone.classList.add(isCorrect ? 'correct' : 'wrong');
+      });
+      draggables.forEach(draggable => {
+        draggable.classList.remove('correct', 'wrong');
+        const draggableText = normalizeInput(draggable.textContent);
+        if (correctAnswers.includes(draggableText)) {
+          const zoneIndex = dropZones.findIndex(zone => normalizeInput(zone.textContent) === draggableText);
+          draggable.classList.add(zoneIndex !== -1 && correctAnswers[zoneIndex] === draggableText ? 'correct' : 'wrong');
+        }
+      });
+    } else if (q.type === 'fill' || q.type === 'word') {
+      const answers = dropZones.map(zone => normalizeInput(zone.value));
+      const correctAnswers = q.ans.map(ans => normalizeInput(ans));
+      isCorrect = correctAnswers.every((ans, i) => ans === answers[i]);
+      dropZones.forEach((zone, i) => {
+        zone.classList.remove('correct', 'wrong');
+        zone.classList.add(isCorrect ? 'correct' : 'wrong');
+      });
+    }
+
+    if (isCorrect) {
+      playSound(800, 0.3, 'triangle');
+      resultEl.textContent = '✔️ Correct!';
+      resultEl.style.color = '#4caf50';
+      if (q.type === 'mcq') {
+        document.querySelectorAll('input[name="mcqOption"]').forEach(input => input.disabled = true);
+      } else if (q.type === 'drag' || q.type === 'match') {
+        dropZones.forEach(zone => zone.classList.add('disabled'));
+        draggables.forEach(draggable => draggable.setAttribute('draggable', false));
+      } else {
+        dropZones.forEach(zone => zone.disabled = true);
+      }
+      submitBtn.disabled = true;
+      if (current < questions.length - 1) {
+        nextBtn.style.display = 'inline-block';
+      } else {
+        showCongratsModal();
+      }
+      if (q.type === 'word' && current === 5 && normalizeInput(dropZones[0].value) === '5') {
+        drawNumberLine(14, 5, -3, 5);
+      } else if (q.type === 'fill' && current === 4 && normalizeInput(dropZones[0].value) === '17') {
+        drawNumberLineForColorQuestion([5, 8, 11, 14, 17]);
+      }
+    } else {
+      playSound(300, 0.3, 'triangle');
+      resultEl.textContent = '❌ Try Again';
+      resultEl.style.color = '#d32f2f';
+      if (q.type === 'word' && current === 5) {
+        shapes = [];
+        drawNumberLine(14, 5, -3);
+      } else if (q.type === 'fill' && current === 4) {
+        shapes = [];
+        drawNumberLine(5, 17, 3);
+      }
+    }
+  }
+
+  function updateSubmitButton() {
+    const q = questions[current];
+    if (q.type === 'mcq') {
+      submitBtn.disabled = document.querySelectorAll('input[name="mcqOption"]:checked').length === 0;
+    } else if (q.type === 'drag' || q.type === 'match') {
+      submitBtn.disabled = !dropZones.every(zone => normalizeInput(zone.textContent).length > 0);
+    } else if (q.type === 'fill' || q.type === 'word') {
+      submitBtn.disabled = !dropZones.every(zone => normalizeInput(zone.value).length > 0);
+      if (q.type === 'word' && current === 5) {
+        const answers = dropZones.map(zone => normalizeInput(zone.value));
+        const correctAnswers = q.ans.map(ans => normalizeInput(ans));
+        if (answers[0] === correctAnswers[0]) {
+          drawNumberLine(14, 5, -3, 5);
+        } else {
+          shapes = [];
+          drawNumberLine(14, 5, -3);
+        }
+      } else if (q.type === 'fill' && current === 4) {
+        const answers = dropZones.map(zone => normalizeInput(zone.value));
+        const correctAnswers = q.ans.map(ans => normalizeInput(ans));
+        if (answers[0] === correctAnswers[0]) {
+          drawNumberLineForColorQuestion([5, 8, 11, 14, 17]);
+        } else {
+          shapes = [];
+          drawNumberLine(5, 17, 3);
+        }
+      }
+    }
+  }
+
+  nextBtn.onclick = () => {
+    playSound(700, 0.1, 'square');
+    current++;
+    loadQuestion();
+  };
+
+  submitBtn.onclick = () => {
+    playSound(600, 0.05, 'square');
+    checkAnswer();
+  };
+
+  restartBtn.onclick = () => {
+    playSound(700, 0.1, 'square');
+    current = 0;
+    loadQuestion();
+  };
+
+  loadQuestion();
+</script>
+</body>
+</html>
